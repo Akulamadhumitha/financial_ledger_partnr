@@ -6,8 +6,8 @@ router.post('/transfer', async (req, res) => {
   try {
     const { sourceAccountId, destinationAccountId, amount } = req.body;
 
-    // 400 — Bad Request (invalid input)
-    if (!sourceAccountId || !destinationAccountId || !amount) {
+    // 400 — Bad Request
+    if (!sourceAccountId || !destinationAccountId || amount == null) {
       return res.status(400).json({
         error: 'Missing required fields'
       });
@@ -31,6 +31,14 @@ router.post('/transfer', async (req, res) => {
     });
 
   } catch (err) {
+
+    // 404 — Account not found
+    if (err.message === 'ACCOUNT_NOT_FOUND') {
+      return res.status(404).json({
+        error: 'Source or destination account not found'
+      });
+    }
+
     // 422 — Business rule violation
     if (err.message === 'INSUFFICIENT_FUNDS') {
       return res.status(422).json({
@@ -38,7 +46,7 @@ router.post('/transfer', async (req, res) => {
       });
     }
 
-    // 500 — Unknown / system error
+    // 500 — System error
     console.error(err);
     return res.status(500).json({
       error: 'Internal server error'
